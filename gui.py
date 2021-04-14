@@ -115,12 +115,17 @@ class GUI(Tk):
 
     
     def add_buttons(self):
-        self.style.configure("on.TButton", background="grey", relief="flat")
-        self.style.configure("off.TButton", background="#6b6b6b", relief="sunken")
+        self.style.configure("on.TButton", background="grey", relief="flat", foreground="red")
+        self.style.configure("off.TButton", background="#6b6b6b", relief="sunken", foreground="grey")
+        self.style.map("on.TButton", 
+            foreground = [("active", "grey")],
+            background = [("active", "grey")]
+                )
         for show in Lightshow.shows:
             show_button = ttk.Button(self.button_frame, image = show.icon, style="off.TButton")
             show.button = show_button
             show_button.config(command=show)
+           
             show_button.pack(side="left", anchor="nw")
         Lightshow.shows[0].button.config(style="on.TButton")
     
