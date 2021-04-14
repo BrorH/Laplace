@@ -88,6 +88,7 @@ class GUI(Tk):
         Tk.__init__(self)
         #self.set_theme("black")
         self.title("Laplace Lightshows")
+        self.config(cursor="none")
         self.style = ttk.Style()
         self.geometry("1280x400")
         self.resizable(False, False)
