@@ -88,11 +88,11 @@ class GUI(Tk):
         Tk.__init__(self)
         #self.set_theme("black")
         self.title("Laplace Lightshows")
-        self.config(cursor="none")
+        # self.config(cursor="none") # enable this to hide cursor on touch display
+        # self.attributes("-fullscreen", True) # enable this to go fullscreen on touch display
         self.style = ttk.Style()
         self.geometry("1280x400")
         self.resizable(False, False)
-        self.attributes("-fullscreen", True)
 
         self.style.configure("colorbar.Horizontal.TScale", troughcolor="blue", sliderthickness=40)
         
