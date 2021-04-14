@@ -91,6 +91,7 @@ class GUI(Tk):
         self.style = ttk.Style()
         self.geometry("1280x400")
         self.resizable(False, False)
+        self.attributes("-fullscreen", True)
 
         self.style.configure("colorbar.Horizontal.TScale", troughcolor="blue", sliderthickness=40)
         
