@@ -15,9 +15,9 @@ import threading
 import sys
 
 
+lightshow_id = 0 # the initial lightshow_id which is incremented by a button press
+kill_all_threads = False # when True, all threads will halt
 
-
-#subprocess.call(["touch", "/home/pi/started.yes.nad"])
 
 pixel_pin = board.D18 # BCM ID for data out pin connected to the neopixels
 button_pin = 15 # BCM ID for pin connected to the button
@@ -25,24 +25,10 @@ power_switch_pin = 3
 num_pixels = 240 # The number of NeoPixels
 
 
-global mode, kill_all_threads
-
-mode = 0 # the initial mode which is incremented by a button press
-num_modes = 2 # the number of different light modes
-kill_all_threads = False # when True, all threads will halt
-
-
-
+# Neopixel init setup
 GPIO.setmode(GPIO.BCM)
-
-GPIO.setup(button_pin, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) # for interrupts
-    
-
-
-ORDER = neopixel.GRB # green-red-blue
-
 pixels = neopixel.NeoPixel(
-    pixel_pin, num_pixels, brightness=0.5, auto_write=False, pixel_order=ORDER
+    pixel_pin, num_pixels, brightness=0.5, auto_write=False, pixel_order=neopixel.GRB
 )
 
 
@@ -57,12 +43,13 @@ def exit(shutdown = True, *args, **kwargs):
         except Exception as e:
             log_error(e)
 
+    # turn off the pixels
     pixels.fill((0,0,0))
     pixels.show()
 
     GPIO.cleanup()
     if shutdown:
-        print("poweroff")
+        print("Shutting down ... ")
         subprocess.call(['shutdown', '-h', 'now'], shell=False)
     else:
         sys.exit(0)
@@ -70,11 +57,11 @@ def exit(shutdown = True, *args, **kwargs):
 
 
 
-def increment_mode():
-    global mode 
-    mode += 1
-    mode = mode % num_modes
-    print(mode)
+def change_ligthshow():
+    global lightshow_id 
+    lightshow_id += 1
+    lightshow_id = lightshow_id % num_lightshows
+    print(lightshow_id)
     
 
 def check_for_button_press(prev_val):
@@ -87,7 +74,7 @@ def check_for_button_press(prev_val):
 
 
 
-def rainbow_cycle( _mode = 0):
+def rainbow_cycle(id = 0):
 
     def wheel(pos):
         # Input a value 0 to 255 to get a color value.
@@ -118,34 +105,39 @@ def rainbow_cycle( _mode = 0):
                 pixels[i] = wheel(pixel_index & 255)
             pixels.show()
             
-            if mode == _mode: # check if button has been pressed
+            if lightshow_id == id: # check if button has been pressed
                 time.sleep(0.01)
             else:
                 return
 
-def blink(_mode = 1):
+def blink(id = 1):
     colors = [(255,0,0), (0,255,0), (0,0,255)]
     while True and (not kill_all_threads):
         for i in range(3):
             pixels.fill(colors[i])
             pixels.show()
 
-            if mode == _mode: # check if button has been pressed
+            if lightshow_id == id: # check if button has been pressed
                 time.sleep(0.2)
             else:
                 return
 
 
 
-def poll_button(wait=0.08):
+def base_thread_method(wait=0.08):
+    # the base thread in which all non-lightshow events take place
+
+    # setup button and power switch GPIO
+    GPIO.setup(button_pin, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) # for interrupts
     GPIO.setup(power_switch_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(power_switch_pin, GPIO.BOTH, callback=exit)
+    GPIO.add_event_detect(power_switch_pin, GPIO.BOTH, callback=exit) # make a switch flip toggle power
+
     prev_val = GPIO.input(button_pin)
     while True and (not kill_all_threads):
         time.sleep(wait)
         is_pressed, prev_val = check_for_button_press(prev_val)
         if is_pressed:
-            increment_mode()
+            change_ligthshow()
        
 
 def log_error(err):
@@ -156,19 +148,19 @@ def log_error(err):
 
 
 if __name__ == "__main__":
-    
+    # wait for button press to change lightshow_id
+    lightshows = [rainbow_cycle, blink]
+    num_lightshows = len(lightshows) # the number of different lightshows
 
-    # wait for button press to change mode
-    modes = [rainbow_cycle, blink]
+
+    base_thread = threading.Thread(target = base_thread_method)
+    base_thread.start()
     prev_val = GPIO.input(button_pin)
-
-    btn_listener = threading.Thread(target = poll_button)
-    btn_listener.start()
     
     while True:
         pixels.fill((0,0,0))
         pixels.show()
-        lightshow_thread = threading.Thread(target = modes[mode])
+        lightshow_thread = threading.Thread(target = lightshows[lightshow_id])
         lightshow_thread.start()
         try:
             lightshow_thread.join()
@@ -180,7 +172,3 @@ if __name__ == "__main__":
             
 
         time.sleep(0.08)
-
-    
-      
-
