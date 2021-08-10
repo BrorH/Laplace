@@ -13,7 +13,12 @@ import neopixel
 import subprocess
 import threading
 import sys
+import random 
 
+from ADCDevice import *
+time.sleep(1)
+adc = ADCDevice() #
+adc = PCF8591()
 
 lightshow_id = 0 # the initial lightshow_id which is incremented by a button press
 kill_all_threads = False # when True, all threads will halt
@@ -26,6 +31,7 @@ num_pixels = 240 # The number of NeoPixels
 
 
 # Neopixel init setup
+
 GPIO.setmode(GPIO.BCM)
 pixels = neopixel.NeoPixel(
     pixel_pin, num_pixels, brightness=0.5, auto_write=False, pixel_order=neopixel.GRB
@@ -33,24 +39,30 @@ pixels = neopixel.NeoPixel(
 
 
 def exit(shutdown = True, *args, **kwargs):
+    if GPIO.input(power_switch_pin) == 1:
+        return
     global kill_all_threads
 
     # safely end all threads
     kill_all_threads = True
-    for thread in threading.enumerate()[1:]:
+    for thread in threading.enumerate():
         try:
+            print(thread)
             thread.join(timeout=1)
         except Exception as e:
             log_error(e)
+            #print(e)
 
     # turn off the pixels
     pixels.fill((0,0,0))
     pixels.show()
-
+    
+    adc.close()
     GPIO.cleanup()
     if shutdown:
         print("Shutting down ... ")
         subprocess.call(['shutdown', '-h', 'now'], shell=False)
+        sys.exit(1)
     else:
         sys.exit(0)
 
@@ -122,6 +134,32 @@ def blink(id = 1):
             else:
                 return
 
+def fade(id = 2):
+    while (not kill_all_threads):
+        color = [random.randint(0,255) for i in range(3)]
+        color[random.randint(0,2)] = 0
+        for i in range(256):
+            pixels.fill(tuple([int(i/256 * a) for a in color]))
+            pixels.show()
+            if lightshow_id == id: # check if button has been pressed
+                time.sleep(0.005)
+            else:
+                return
+        for i in range(int(256/2)):
+            i = 255 - i*2
+            pixels.fill(tuple([int(i/256 * a) for a in color]))
+            pixels.show()
+            if lightshow_id == id: # check if button has been pressed
+                time.sleep(0.005)
+            else:
+                return
+        pixels.fill((0,0,0))
+        pixels.show()
+        for i in range(10):
+            if lightshow_id == id: # check if button has been pressed
+                time.sleep(0.01)
+            else:
+                return
 
 
 def base_thread_method(wait=0.08):
@@ -129,27 +167,33 @@ def base_thread_method(wait=0.08):
 
     # setup button and power switch GPIO
     GPIO.setup(button_pin, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) # for interrupts
-    GPIO.setup(power_switch_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(power_switch_pin, GPIO.BOTH, callback=exit) # make a switch flip toggle power
-
+    #GPIO.setup(power_switch_pin, GPIO.IN,pull_up_down=GPIO.PUD_OFF)
+    #GPIO.add_event_detect(power_switch_pin, GPIO.BOTH, callback=exit) # make a switch flip toggle power
+    
     prev_val = GPIO.input(button_pin)
     while True and (not kill_all_threads):
         time.sleep(wait)
+        #print(GPIO.input(3))
+        pot_value = adc.analogRead(0) / 255# *0.85 + 0.05    # read the ADC value of channel 0
+        #print(pot_value)
+        pixels.brightness = pot_value
         is_pressed, prev_val = check_for_button_press(prev_val)
         if is_pressed:
             change_ligthshow()
        
 
 def log_error(err):
+    print("got error:")
     print(err)
-    with open("~/Laplace/err.txt", "w+") as file:
+    print("===================")
+    with open("home/pi/Laplace/err.txt", "w+") as file:
         file.writelines(err)
 
 
 
 if __name__ == "__main__":
     # wait for button press to change lightshow_id
-    lightshows = [rainbow_cycle, blink]
+    lightshows = [rainbow_cycle, blink, fade]
     num_lightshows = len(lightshows) # the number of different lightshows
 
 
