@@ -30,7 +30,7 @@ def show(lightshow, id):
             for j in range( lightshow.num_pixels):
                 red, green, blue = wheel(j)
                 wave_frac = (math.sin(i+j)*127 +128)/255
-                lightshow.pixels[j] = (red*wave_frac, green*wave_frac, blue*wave_frac)
+                lightshow.pixels[j] = (int(round(red*wave_frac)), int(round(green*wave_frac)), int(round(blue*wave_frac)))
                 lightshow.pixels.show()
 
                 if lightshow.current_lightshow_id == id: # check if button has been pressed
