@@ -22,7 +22,7 @@ def wheel(pos):
             b = int(255 - pos * 3)
         return (r, g, b)
 
-def show(lightshow, id = 2):
+def show(lightshow, id):
     while (not lightshow.kill_all_threads):# and (not sw):
         print("circus")
         j = 0

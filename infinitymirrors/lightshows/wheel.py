@@ -23,7 +23,7 @@ def wheel(pos):
 
 
 
-def show(lightshow, id = 0):
+def show(lightshow, id):
 
     
     while (not lightshow.kill_all_threads):# and (not sw):

@@ -1,5 +1,5 @@
 import random, time
-def show(lightshow, id = 1):
+def show(lightshow, id):
     while (not lightshow.kill_all_threads):# and (not sw):
         print("fade")
         color = [random.randint(0,255) for i in range(3)]
