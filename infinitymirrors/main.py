@@ -91,7 +91,7 @@ class Lightshow:
             self.pixels.show()
 
             # start lightshow_thread
-            lightshow_thread = threading.Thread(target = self.lightshows[self.current_lightshow_id], args=[self],name=f"lightshow_thread-{str(self.current_lightshow_id)}")
+            lightshow_thread = threading.Thread(target = self.lightshows[self.current_lightshow_id], args=(self, self.current_lightshow_id),name=f"lightshow_thread-{str(self.current_lightshow_id)}")
             lightshow_thread.start()
 
             try:
@@ -147,7 +147,8 @@ class Lightshow:
 
         # global analog, btn, sw
         while True and (not self.kill_all_threads):
-
+            # time.sleep(0.1)
+            # continue
             line = port.readline().decode()
             tmpanalog, tmpbtn, tmpsw, tmpswChg = line.split(',')[:4]
 
