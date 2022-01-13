@@ -147,8 +147,6 @@ class Lightshow:
 
         # global analog, btn, sw
         while True and (not self.kill_all_threads):
-            time.sleep(0.1)
-            continue
 
             line = port.readline().decode()
             tmpanalog, tmpbtn, tmpsw, tmpswChg = line.split(',')[:4]
