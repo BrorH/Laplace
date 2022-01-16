@@ -16,6 +16,7 @@ import sys
 import random 
 import math
 import serial
+import datetime
 from os import listdir
 from os.path import isfile, join
 
@@ -57,7 +58,7 @@ class Lightshow:
         )
 
         # find all lightshows in the ./lightshows dir
-        filenames = [f.rstrip(".py") for f in listdir("./lightshows") if isfile(join("./lightshows", f))]
+        filenames = [f.rstrip(".py") for f in listdir("/home/pi/Laplace/infinitymirrors/lightshows") if isfile(join("/home/pi/Laplace/infinitymirrors/lightshows", f))]
 
         self.lightshows = []
         for a in filenames:
@@ -161,7 +162,9 @@ class Lightshow:
 
             self.pixels.brightness = analog/1023 if sw else 0
         
-
+    def log_error(self, err):
+        with open("/home/pi/Laplace/infinitymirrors/err.txt", "w+") as file:
+            file.write(f"{datetime.datetime.now()}  {err} \n")
 
 if __name__ == "__main__":
     ligthshow = Lightshow()
