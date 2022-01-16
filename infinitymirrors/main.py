@@ -20,29 +20,17 @@ import datetime
 from os import listdir
 from os.path import isfile, join
 
-# global analog, btn, sw
-# sw = False
 
 
+# startup time (let rest of system boot properly)
+time.sleep(10)
 
+# USB port for panel
 port = serial.Serial("/dev/ttyUSB0", 115200)
 
-
-# startup time
-time.sleep(1)
-
-
-# lightshow_id = 0 # the initial lightshow_id which is incremented by a button press
-# kill_all_threads = False # when True, all threads will halt
-
-
-# num_pixels = 240 # The number of NeoPixels
-# pixel_pin = board.D18 # BCM ID for data out pin connected to the neopixels
-
-
 # Neopixel init setup
-
 GPIO.setmode(GPIO.BCM)
+
 class Lightshow:
     current_lightshow_id = 0 # the initial lightshow_id which is incremented by a button press
     kill_all_threads = False # when True, all threads will halt
@@ -166,8 +154,8 @@ class Lightshow:
             self.pixels.brightness = analog/1023 if sw else 0
         
     def log_error(self, err):
-        with open("/home/pi/Laplace/infinitymirrors/err.txt", "w+") as file:
-            file.write(f"{datetime.datetime.now()}  {err} \n")
+        with open("/home/pi/Laplace/infinitymirrors/err.txt", "a+") as file:
+            file.write(f"{datetime.datetime.now()}: {err} \n")
 
 if __name__ == "__main__":
     ligthshow = Lightshow()
