@@ -57,18 +57,22 @@ class Lightshow:
             self.pixel_pin, self.num_pixels, brightness=0.5, auto_write=False, pixel_order=neopixel.GRB
         )
 
-        # find all lightshows in the ./lightshows dir
-        filenames = [f.rstrip(".py") for f in listdir("/home/pi/Laplace/infinitymirrors/lightshows") if isfile(join("/home/pi/Laplace/infinitymirrors/lightshows", f))]
+        try:
+        
+            # find all lightshows in the ./lightshows dir
+            filenames = [f.rstrip(".py") for f in listdir("/home/pi/Laplace/infinitymirrors/lightshows") if isfile(join("/home/pi/Laplace/infinitymirrors/lightshows", f))]
 
-        self.lightshows = []
-        for a in filenames:
-            exec(f"import lightshows.{a}")
-            self.lightshows.append(eval(f"lightshows.{a}.show"))
+            self.lightshows = []
+            for a in filenames:
+                exec(f"import lightshows.{a}")
+                self.lightshows.append(eval(f"lightshows.{a}.show"))
 
 
-        # self.lightshows = lightshows
-        self.num_lightshows = len(self.lightshows)
-
+            # self.lightshows = lightshows
+            self.num_lightshows = len(self.lightshows)
+        except Exception as e:
+            self.log_error(e)
+            self.exit(shutdown=False)
         
 
 
@@ -126,7 +130,6 @@ class Lightshow:
         self.pixels.fill((0,0,0))
         self.pixels.show()
         
-        #adc.close()
         GPIO.cleanup()
         if shutdown:
             print("Shutting down ... ")
@@ -168,7 +171,11 @@ class Lightshow:
 
 if __name__ == "__main__":
     ligthshow = Lightshow()
-    ligthshow.start()
+    try:
+        ligthshow.start()
+    except Exception as e:
+        if e is not KeyboardInterrupt:
+            lightshow.log_error(e)
 
 
 
